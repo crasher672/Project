@@ -1,48 +1,34 @@
 'use client';
 
+import { ui } from '../styles/ui';
+
 type Props = {
-  weaponFilter: string;
-  setWeaponFilter: (value: string) => void;
-  rarityFilter: string;
-  setRarityFilter: (value: string) => void;
   search: string;
-  setSearch: (value: string) => void;
+  setSearch: (v: string) => void;
+
+  rarityFilter: string;
+  setRarityFilter: (v: string) => void;
 };
 
-export default function Filters({
-  weaponFilter,
-  setWeaponFilter,
-  rarityFilter,
-  setRarityFilter,
+export default function FiltersBar({
   search,
   setSearch,
+  rarityFilter,
+  setRarityFilter,
 }: Props) {
   return (
-    <div className="flex gap-4 mb-6 flex-wrap items-center">
+    <div className="flex gap-4 mb-4 flex-wrap">
 
-      {/* Search */}
       <input
         type="text"
         placeholder="Search skins..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full md:w-64 bg-[#111] border border-[#333] p-2 rounded"
+        className={ui.topInput}
       />
 
-      {/* Weapon Filter */}
       <select
-        className="bg-[#111] border border-[#333] p-2 rounded"
-        value={weaponFilter}
-        onChange={(e) => setWeaponFilter(e.target.value)}
-      >
-        <option value="All">All Weapons</option>
-        <option value="AK-47">AK-47</option>
-        <option value="AWP">AWP</option>
-      </select>
-
-      {/* Rarity Filter */}
-      <select
-        className="bg-[#111] border border-[#333] p-2 rounded"
+        className={ui.select}
         value={rarityFilter}
         onChange={(e) => setRarityFilter(e.target.value)}
       >

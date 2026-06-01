@@ -12,5 +12,7 @@ export type Skin = {
   weapon: string;
   price: number;
   rarity: Rarity;
+  wear: string;
+  type: string;
   image: string;
 };

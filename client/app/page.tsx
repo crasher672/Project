@@ -1,14 +1,16 @@
 'use client';
 
 import SkinCard from './components/skinCard';
-import Filters from './components/filters';
+import Sidebar from './components/sidebar';
+import FiltersBar from './components/filters';
 import { Skin } from '../../server/src/types';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function Home() {
   const [skins, setSkins] = useState<Skin[]>([]);
-  const [weaponFilter, setWeaponFilter] = useState('All');
+  const [selectedType, setSelectedType] = useState('All');
+  const [selectedWeapon, setSelectedWeapon] = useState('All');
   const [rarityFilter, setRarityFilter] = useState('All');
   const [search, setSearch] = useState('');
 
@@ -20,39 +22,88 @@ export default function Home() {
       });
   }, []);
 
-  const filteredSkins = skins.filter((skin) => {
-    const weaponMatch =
-      weaponFilter === 'All' || skin.weapon === weaponFilter;
+  const filteredSkins = useMemo(() => {
+    return skins.filter((skin) => {
+      const typeMatch =
+        selectedType === 'All' || skin.type === selectedType;
 
-    const rarityMatch =
-      rarityFilter === 'All' || skin.rarity === rarityFilter;
+      const weaponMatch =
+        selectedWeapon === 'All' || skin.weapon === selectedWeapon;
 
-    const searchMatch =
-      skin.name.toLowerCase().includes(search.toLowerCase()) ||
-      skin.weapon.toLowerCase().includes(search.toLowerCase());
+      const rarityMatch =
+        rarityFilter === 'All' || skin.rarity === rarityFilter;
 
-    return weaponMatch && rarityMatch && searchMatch;
-  });
+      const searchMatch =
+        skin.name.toLowerCase().includes(search.toLowerCase()) ||
+        skin.weapon.toLowerCase().includes(search.toLowerCase());
+
+      return typeMatch && weaponMatch && rarityMatch && searchMatch;
+    });
+  }, [skins, selectedType, selectedWeapon, rarityFilter, search]);
+
+  const types = useMemo(() => {
+    return ['All', ...Array.from(new Set(skins.map((s) => s.type)))];
+  }, [skins]);
+
+  const weaponMap = useMemo(() => {
+    const map: Record<string, string[]> = {};
+
+    skins.forEach((skin) => {
+      if (!map[skin.type]) map[skin.type] = [];
+      if (!map[skin.type].includes(skin.weapon)) {
+        map[skin.type].push(skin.weapon);
+      }
+    });
+
+    return map;
+  }, [skins]);
+
+  const availableWeapons =
+    selectedType === 'All'
+      ? Array.from(new Set(skins.map((s) => s.weapon)))
+      : weaponMap[selectedType] || [];
 
   return (
     <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-4xl font-bold mb-6">
-        🎮 CS2 Skins Market
-      </h1>
 
-      <Filters
-        weaponFilter={weaponFilter}
-        setWeaponFilter={setWeaponFilter}
-        rarityFilter={rarityFilter}
-        setRarityFilter={setRarityFilter}
-        search={search}
-        setSearch={setSearch}
-      />
+      <div className="mb-6">
+        <h1 className="text-4xl font-bold">🎮 CS2 Skins Market</h1>
+        <p className="text-gray-400 mt-1">
+          Browse Skins, Knives, Gloves & more
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredSkins.map((skin) => (
-          <SkinCard key={skin.id} skin={skin} />
-        ))}
+      <div className="flex gap-6">
+
+        <Sidebar
+          types={types}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          availableWeapons={availableWeapons}
+          selectedWeapon={selectedWeapon}
+          setSelectedWeapon={setSelectedWeapon}
+        />
+
+        <div className="flex-1">
+
+          <FiltersBar
+            search={search}
+            setSearch={setSearch}
+            rarityFilter={rarityFilter}
+            setRarityFilter={setRarityFilter}
+          />
+
+          <div className="text-sm text-gray-400 mb-3">
+            Showing {filteredSkins.length} skins
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredSkins.map((skin) => (
+              <SkinCard key={skin.id} skin={skin} />
+            ))}
+          </div>
+
+        </div>
       </div>
     </div>
   );
