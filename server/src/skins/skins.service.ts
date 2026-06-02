@@ -1,17 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { skins } from './data/skins.data';
 
 @Injectable()
 export class SkinsService {
-  constructor(private prisma: PrismaService) {}
-
   findAll() {
-    return this.prisma.skin.findMany();
+    return skins;
   }
 
   findOne(id: number) {
-    return this.prisma.skin.findUnique({
-      where: { id },
-    });
+    const skin = skins.find((s) => s.id === id);
+
+    if (!skin) {
+      throw new NotFoundException('Skin not found');
+    }
+
+    return skin;
+  }
+
+  findByWeapon(weapon: string) {
+    return skins.filter((s) => s.weapon === weapon);
   }
 }

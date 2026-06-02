@@ -1,11 +1,11 @@
 'use client';
 
-import SkinCard from './components/skinCard';
+import { useEffect, useMemo, useState } from 'react';
+
+import SkinGrid from './components/skinGrid';
 import Sidebar from './components/sidebar';
 import FiltersBar from './components/filters';
 import { Skin } from '../../server/src/types';
-
-import { useEffect, useMemo, useState } from 'react';
 
 export default function Home() {
   const [skins, setSkins] = useState<Skin[]>([]);
@@ -65,7 +65,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white p-10">
-
       <div className="mb-6">
         <h1 className="text-4xl font-bold">🎮 CS2 Skins Market</h1>
         <p className="text-gray-400 mt-1">
@@ -74,7 +73,6 @@ export default function Home() {
       </div>
 
       <div className="flex gap-6">
-
         <Sidebar
           types={types}
           selectedType={selectedType}
@@ -85,7 +83,6 @@ export default function Home() {
         />
 
         <div className="flex-1">
-
           <FiltersBar
             search={search}
             setSearch={setSearch}
@@ -97,12 +94,8 @@ export default function Home() {
             Showing {filteredSkins.length} skins
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredSkins.map((skin) => (
-              <SkinCard key={skin.id} skin={skin} />
-            ))}
-          </div>
-
+          {/* CLEAN: grid moved to component */}
+          <SkinGrid skins={filteredSkins} />
         </div>
       </div>
     </div>
