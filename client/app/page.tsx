@@ -7,21 +7,55 @@ import Sidebar from './components/sidebar';
 import FiltersBar from './components/filters';
 import { Skin } from '../../server/src/types';
 
+type Meta = {
+  types: string[];
+  weapons: string[];
+};
+
 export default function Home() {
   const [skins, setSkins] = useState<Skin[]>([]);
+  const [meta, setMeta] = useState<Meta>({ types: [], weapons: [] });
+
   const [selectedType, setSelectedType] = useState('All');
   const [selectedWeapon, setSelectedWeapon] = useState('All');
   const [rarityFilter, setRarityFilter] = useState('All');
   const [search, setSearch] = useState('');
 
+  const [page, setPage] = useState(1);
+
+  // FETCH PAGINATED SKINS
   useEffect(() => {
-    fetch('http://localhost:3001/skins')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setSkins(data);
+    const load = async () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: '24',
+        type: selectedType,
+        weapon: selectedWeapon,
+        rarity: rarityFilter,
+        search,
       });
+
+      const res = await fetch(`http://localhost:3001/skins?${params}`);
+      const json = await res.json();
+
+      setSkins(json.data); // IMPORTANT: backend shape
+    };
+
+    load();
+  }, [page, selectedType, selectedWeapon, rarityFilter, search]);
+
+  // FETCH META ONCE
+  useEffect(() => {
+    const loadMeta = async () => {
+      const res = await fetch(`http://localhost:3001/skins/meta`);
+      const json = await res.json();
+      setMeta(json);
+    };
+
+    loadMeta();
   }, []);
 
+  // FRONTEND FILTER (optional safety layer)
   const filteredSkins = useMemo(() => {
     return skins.filter((skin) => {
       const typeMatch =
@@ -41,43 +75,18 @@ export default function Home() {
     });
   }, [skins, selectedType, selectedWeapon, rarityFilter, search]);
 
-  const types = useMemo(() => {
-    return ['All', ...Array.from(new Set(skins.map((s) => s.type)))];
-  }, [skins]);
-
-  const weaponMap = useMemo(() => {
-    const map: Record<string, string[]> = {};
-
-    skins.forEach((skin) => {
-      if (!map[skin.type]) map[skin.type] = [];
-      if (!map[skin.type].includes(skin.weapon)) {
-        map[skin.type].push(skin.weapon);
-      }
-    });
-
-    return map;
-  }, [skins]);
-
-  const availableWeapons =
-    selectedType === 'All'
-      ? Array.from(new Set(skins.map((s) => s.weapon)))
-      : weaponMap[selectedType] || [];
-
   return (
     <div className="min-h-screen bg-black text-white p-10">
       <div className="mb-6">
         <h1 className="text-4xl font-bold">🎮 CS2 Skins Market</h1>
-        <p className="text-gray-400 mt-1">
-          Browse Skins, Knives, Gloves & more
-        </p>
       </div>
 
       <div className="flex gap-6">
         <Sidebar
-          types={types}
+          types={meta.types}
           selectedType={selectedType}
           setSelectedType={setSelectedType}
-          availableWeapons={availableWeapons}
+          availableWeapons={meta.weapons}
           selectedWeapon={selectedWeapon}
           setSelectedWeapon={setSelectedWeapon}
         />
@@ -91,11 +100,22 @@ export default function Home() {
           />
 
           <div className="text-sm text-gray-400 mb-3">
-            Showing {filteredSkins.length} skins
+            Showing {filteredSkins.length}
           </div>
 
-          {/* CLEAN: grid moved to component */}
           <SkinGrid skins={filteredSkins} />
+
+          <div className="flex gap-3 mt-6">
+            <button onClick={() => setPage(p => Math.max(p - 1, 1))}>
+              Prev
+            </button>
+
+            <span>Page {page}</span>
+
+            <button onClick={() => setPage(p => p + 1)}>
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
